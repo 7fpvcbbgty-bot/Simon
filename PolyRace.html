@@ -171,6 +171,11 @@ body.ingar #mb,body.ingar #vb,body.ingar #rb,body.ingar #pm,body.ingar #pz,body.
 #edz button{width:46px;height:46px;border-radius:14px;font-size:22px}
 #edu:disabled,#edr:disabled{opacity:.35}
 #edb{position:fixed;top:calc(env(safe-area-inset-top,0px) + 130px);right:12px;display:none;z-index:3;padding:10px 14px;border:1px solid #22d3ee88;border-radius:14px;background:#050a22dd;color:#fff;font:800 15px Rajdhani,system-ui,sans-serif}
+#nx .mprow{display:flex;gap:8px}
+#nx #mp-code{flex:1;min-width:0;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--ln);background:#050a22;color:#a5f3fc;font:700 20px Orbitron,system-ui,sans-serif;letter-spacing:.25em;text-transform:uppercase;text-align:center}
+#nx .mpcode{font:900 34px Orbitron,system-ui,sans-serif;letter-spacing:.3em;text-align:center;color:#22d3ee;text-shadow:0 0 16px #22d3ee88;padding:6px 0}
+#nx #mp-box{display:none;flex-direction:column;gap:8px}
+#nx #mp-st{line-height:1.5;font-size:15px;opacity:.9}
 </style></head><body>
 <div id="hud"><div><small>AKTUELL</small><span id="t">0.00</span><small id="dl" style="font-size:14px;font-weight:800;min-height:16px"></small></div><div><small>RUNDE</small><span id="l">0</span></div><div><small>REKORD</small><span id="b">--</span></div><div><small>PLATZ</small><span id="pl">-</span></div><div><small>KM/H</small><span id="s">0</span></div></div>
 <div id="dr"><div class="box"><h3 style="margin:0 0 8px">🎁 Täglich: Belohnung &amp; Aufgaben</h3><div id="dt"></div><button id="dc"></button><div id="dtk"></div><button id="dx">Schließen</button></div></div><div id="hk"><div class="box"><h3 style="margin:0 0 8px">🛠 Hack-Menü</h3>
@@ -1766,7 +1771,7 @@ const K={};
 const AK={37:'ArrowLeft',38:'ArrowUp',39:'ArrowRight',40:'ArrowDown'};
 const nk=e=>{const k=e.key||'';if(k.startsWith('Arrow'))return k;const u=k.match(/^UIKeyInput(Up|Down|Left|Right)Arrow$/);if(u)return 'Arrow'+u[1];if(AK[e.keyCode])return AK[e.keyCode];
  if(e.code&&e.code!=='Unidentified')return e.code;return k===' '?'Space':k.length==1?'Key'+k.toUpperCase():k};
-function kd(e){if(typeof EDON!='undefined'&&EDON)return;const c=nk(e);K[c]=1;
+function kd(e){if(document.activeElement&&document.activeElement.id=='mp-code')return;if(typeof EDON!='undefined'&&EDON)return;const c=nk(e);K[c]=1;
  if(!menu&&(c=='KeyP'||c=='Escape')){togglePause(!PAUSED);return}
  if(LOBM&&!menu&&!PAUSED&&/^Digit[1-4]$/.test(c)){emote(+c.slice(-1)-1);return}
  if(menu){if(KR.ui||garage||$('dr').style.display=='flex'||$('hk').style.display=='flex')return;if(c=='Escape'||c=='KeyM'){closeMenu();return}const d=+c.slice(-1)||10;if(/^(Digit|Numpad)\d$/.test(c)&&d<MAPS.length)pick(d-1);return}
@@ -2143,4 +2148,39 @@ g('edg').addEventListener('click',()=>{window.nxTest=true;setTimeout(()=>{if(cur
 const _p=pick;pick=function(i){if(i!==CUST)window.nxTest=false;return _p.apply(this,arguments)};
 setInterval(()=>{eb.style.display=(window.nxTest&&!menu&&!EDON&&cur==CUST&&!document.body.classList.contains('photo'))?'block':'none'},200);
 }catch(e){console.error('Editor-Erweiterung',e)}})();
+</script><script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function(){try{
+const g=id=>document.getElementById(id),COL=[0x2a6fdb,0xf2c200,0xe01b1b,0x22aa44,0xa855f7,0xff7a00],AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',gen=()=>Array.from({length:5},()=>AL[Math.floor(Math.random()*AL.length)]).join('');
+let peer=null,code='',isHost=false,myId='',conns=new Map(),roster={},hostConn=null,my={},shim=null,st='idle',msg='',et=null,bt=null;
+const box=document.querySelector('#s-p .nxp');if(!box)return;
+box.innerHTML='<button id="mp-new">🏠 Raum erstellen</button><div class="mprow"><input id="mp-code" maxlength="5" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="mp-join">➡ Beitreten</button></div><div id="mp-st"></div><div id="mp-box"><div class="mpcode" id="mp-c"></div><button id="mp-cp">🔗 Einladung teilen</button><button id="mp-lv">🚪 Raum verlassen</button></div>';
+const ps=(id,f)=>g(id).addEventListener('pointerdown',e=>{e.stopPropagation();f()});
+function onP(ch){const seen=new Set();ch.peers.forEach(p=>{if(p.isMe)return;seen.add(p.peer);let o=others.get(p.peer);if(!o){o={car:ghost(COL[others.size%COL.length])};others.set(p.peer,o)}o.pr=p.presence||{};const w=o.pr.wt;if(w&&w!==o.wt){o.wt=w;if(menu&&typeof o.pr.want=='number')pick(o.pr.want)}});
+ for(const k of [...others.keys()])if(!seen.has(k)){scene.remove(others.get(k).car);others.delete(k)}$('mb').textContent='☰ Menü · 👥 '+(others.size+1);ui()}
+const emit=()=>{if(et)return;et=setTimeout(()=>{et=null;onP({peers:Object.keys(roster).map(id=>({peer:id,isMe:id==myId,presence:roster[id]||{}}))})},50)},
+bc=()=>{if(bt)return;bt=setTimeout(()=>{bt=null;conns.forEach(c=>{try{if(c.open)c.send({t:'r',r:roster})}catch(e){}})},50)};
+const mkShim=()=>({presence(o){Object.assign(my,o);if(isHost){roster[myId]=Object.assign(roster[myId]||{},o);bc();emit()}else if(hostConn&&hostConn.open){try{hostConn.send({t:'p',p:o})}catch(e){}}return Promise.resolve()},onPeers(){}});
+function ui(){const s=g('mp-st'),b=g('mp-box');if(!s)return;const n=Object.keys(roster).length;
+ if(st=='host'||st=='guest'){b.style.display='flex';g('mp-c').textContent=code;s.innerHTML='✅ '+(st=='host'?'Raum offen':'Verbunden')+' · <b>'+n+' Spieler</b><br>Alle fahren zusammen in der Lobby. Wählt einer eine Map, startet sie bei den anderen automatisch.'}
+ else{b.style.display='none';s.textContent=msg||'So geht\'s: Einer erstellt einen Raum und schickt den Code oder den Link an Freunde. Die anderen tippen den Code ein.'}}
+mpInfo=ui;
+function cleanup(){try{peer&&peer.destroy()}catch(e){}peer=null;conns.clear();hostConn=null;roster={};isHost=false;st='idle';if(shim&&room===shim)room=null;shim=null;onP({peers:[]})}
+function fail(e){const t=e&&e.type;cleanup();msg=t=='peer-unavailable'?'❌ Raum nicht gefunden – Code prüfen':t=='timeout'?'❌ Keine Verbindung möglich (Netzwerk blockiert?)':'❌ Kein Kontakt zum Vermittlungsserver – Internet prüfen';ui()}
+const need=()=>{if(window.Peer)return true;msg='❌ Online-Funktion konnte nicht geladen werden (Internet?)';ui();toast(msg);return false};
+function host(tries=0){if(!need())return;cleanup();msg='⏳ Raum wird erstellt …';ui();code=gen();peer=new Peer('pr-'+code);
+ peer.on('open',id=>{myId=id;isHost=true;st='host';roster={};roster[myId]=Object.assign({},my);room=shim=mkShim();msg='';ui()});
+ peer.on('connection',c=>{c.on('open',()=>{conns.set(c.peer,c);roster[c.peer]=roster[c.peer]||{};bc();emit()});c.on('data',d=>{if(d&&d.t=='p'){roster[c.peer]=Object.assign(roster[c.peer]||{},d.p);bc();emit()}});const gone=()=>{conns.delete(c.peer);delete roster[c.peer];bc();emit()};c.on('close',gone);c.on('error',gone)});
+ peer.on('error',e=>{if(e.type=='unavailable-id'&&tries<3)host(tries+1);else fail(e)})}
+function join(c0){const c=(c0||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length!=5){toast('Der Code hat 5 Zeichen');return}if(!need())return;cleanup();msg='⏳ Verbinde …';ui();code=c;peer=new Peer();
+ peer.on('open',id=>{myId=id;const cn=peer.connect('pr-'+c,{reliable:true,serialization:'json'});hostConn=cn;let ok=false;const to=setTimeout(()=>{if(!ok)fail({type:'timeout'})},12000);
+  cn.on('open',()=>{ok=true;clearTimeout(to);isHost=false;st='guest';roster={};roster[myId]={};room=shim=mkShim();msg='';ui();try{cn.send({t:'p',p:my})}catch(e){}});
+  cn.on('data',d=>{if(d&&d.t=='r'){roster=d.r;emit()}});
+  cn.on('close',()=>{if(st=='guest'){toast('🔌 Verbindung zum Raum getrennt');cleanup();msg='';ui()}})});
+ peer.on('error',fail)}
+ps('mp-new',()=>host());ps('mp-join',()=>join(g('mp-code').value));ps('mp-lv',()=>{cleanup();msg='';ui()});
+ps('mp-cp',()=>{const url=location.href.split('?')[0].split('#')[0]+'?raum='+code,tx='Fahr mit mir PolyRace! Raum-Code: '+code;if(navigator.share)navigator.share({title:'PolyRace',text:tx,url}).catch(()=>{});else try{navigator.clipboard.writeText(tx+' '+url);toast('📋 Einladung kopiert')}catch(e){toast('Code: '+code)}});
+g('mp-code').addEventListener('keydown',e=>{if(e.key=='Enter')join(g('mp-code').value)});
+ui();const q=new URLSearchParams(location.search).get('raum');if(q){g('mp-code').value=q.toUpperCase().slice(0,5);setTimeout(()=>join(q),1500)}
+}catch(e){console.error('Online-Raum',e)}})();
 </script></body></html>
